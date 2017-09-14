@@ -5,7 +5,7 @@ specifications:
     status: revision
     spec_type: Profile
     use_cases_url:
-    version: 0.0.1
+    version: 0.0.3
   - name : Beacon
     g_folder: Beacon
     g_mapping_file: Beacon Mapping

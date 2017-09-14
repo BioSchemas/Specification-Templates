@@ -222,7 +222,8 @@ class GSheetsParser:
         mapping_description['spec_mapping_url']=self.spec_metadata['spec_mapping_url']
         mapping_description['status']=self.spec_metadata['status']
         mapping_description['spec_type']=self.spec_metadata['spec_type']
-        mapping_description['gh_folder']='https://github.com/BioSchemas/'+self.spec_metadata['name']
+        mapping_description['gh_folder']='https://github.com/BioSchemas/Specifications/'+self.spec_metadata['name']
+        mapping_description['gh_examples']=mapping_description['gh_folder']+'/Examples'
         mapping_description['gh_tasks']='https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+self.spec_metadata['name']
         mapping_description['edit_url']='https://github.com/BioSchemas/bioschemas.github.io/edit/master/_newSpecs/'+self.spec_metadata['name']+'.md'
         mapping_description['use_cases_url']=self.spec_metadata['use_cases_url']
