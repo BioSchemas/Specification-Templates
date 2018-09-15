@@ -59,11 +59,13 @@ Before starting, please ensure you have the following installed:
 
 ### Adding new specifications
 
-If you have created a new specification (or a specification is missing from the *map2model > docs > specification_md_files* folder) you will need to extend the *map2model > spec2model > configuration.yml* file.
+If you have created a new specification (or a specification is missing from the 
+*[map2model](https://github.com/BioSchemas/map2model) > docs > specification_md_files* folder) 
+you will need to extend the *[map2model](https://github.com/BioSchemas/map2model) > spec2model > configuration.yml* file.
 
 If you are unfamiliar with yaml, please read [http://yaml.org/](http://yaml.org/).
 
-1. Open the *map2model > spec2model > [configuration.yml](https://github.com/BioSchemas/map2model/blob/master/spec2model/configuration.yml)* file.
+1. Open the *[map2model](https://github.com/BioSchemas/map2model) > spec2model > [configuration.yml](https://github.com/BioSchemas/map2model/blob/master/spec2model/configuration.yml)* file.
 1. Erase all the file content and start the ```.yml``` file with
 ```
 specifications:
