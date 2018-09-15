@@ -68,8 +68,11 @@ class FolderDigger:
             print("Searching %s mapping file." % current_config['name'])
             spec_folder_id = self.__get_gfolder_id(current_config, spec_folder_files)
             spec_file_dic = self.__get_gfile_dic(current_config, spec_folder_id)
-            current_config['spec_mapping_url'] = spec_file_dic['alternateLink']
-            specs_list[spec_file_dic['id']] = current_config
+            try:
+                current_config['spec_mapping_url'] = spec_file_dic['alternateLink']
+                specs_list[spec_file_dic['id']] = current_config
+            except KeyError as e:
+                print("Issue loading %s folder, skipping." % current_config['name'])
         return specs_list
 
     def get_specification_list(self):

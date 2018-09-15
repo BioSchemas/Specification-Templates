@@ -1,11 +1,11 @@
 specifications:
-- name : Beacon
- g_folder: Beacon
- g_mapping_file: Beacon Mapping
- status: revision
- spec_type: Profile
- use_cases_url:
- version: 0.2
+- name: Beacon
+  g_folder: Beacon
+  g_mapping_file: Beacon Mapping
+  status: revision
+  spec_type: Profile
+  use_cases_url:
+  version: 0.2
 - name : BioChemEntity
   g_folder: BioChemEntity
   g_mapping_file: BioChemEntity Mapping
@@ -49,34 +49,34 @@ specifications:
   use_cases_url:
   version: 0.2
 - name : Event
- g_folder: Event
- g_mapping_file: Event mapping
- status: revision
- spec_type: Profile
- use_cases_url:
- version: 0.1
+  g_folder: Event
+  g_mapping_file: Event mapping
+  status: revision
+  spec_type: Profile
+  use_cases_url:
+  version: 0.1
 - name : LabProtocol
- g_folder: LabProtocol
- g_mapping_file: LabProtocol Mapping
- status: revision
- spec_type: Type
- use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
- version: 0.1   
+  g_folder: LabProtocol
+  g_mapping_file: LabProtocol Mapping
+  status: revision
+  spec_type: Type
+  use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
+  version: 0.1   
 - name : LabProtocol
- g_folder: LabProtocol
- g_mapping_file: LabProtocol Mapping
- status: revision
- spec_type: Profile
- use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
- version: 0.1
+  g_folder: LabProtocol
+  g_mapping_file: LabProtocol Mapping
+  status: revision
+  spec_type: Profile
+  use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
+  version: 0.1
 #### need mapping files for metrics, organization & person
 - name : Protein
- g_folder: Protein
- g_mapping_file: Protein Mapping
- status: revision
- spec_type: Profile
- use_cases_url: https://docs.google.com/document/d/1MNU-r7CMAvKdGav1VT3XeyQXr2XwRA6JXDsoWoA0R1E
- version: 0.4
+  g_folder: Protein
+  g_mapping_file: Protein Mapping
+  status: revision
+  spec_type: Profile
+  use_cases_url: https://docs.google.com/document/d/1MNU-r7CMAvKdGav1VT3XeyQXr2XwRA6JXDsoWoA0R1E
+  version: 0.4
 - name : ProteinAnnotation
   g_folder: ProteinAnnotation
   g_mapping_file: ProteinAnnotation Mapping
@@ -92,12 +92,12 @@ specifications:
   use_cases_url:
   version: 0.4
 - name : DataRecord
-g_folder: Record
-g_mapping_file: Record Mapping
-status: revision
-spec_type: Type
-use_cases_url: https://drive.google.com/drive/folders/0B0fE3oOZIq44U1gzLWgtV0VBaTQ
-version: 0.1
+  g_folder: Record
+  g_mapping_file: Record Mapping
+  status: revision
+  spec_type: Type
+  use_cases_url: https://drive.google.com/drive/folders/0B0fE3oOZIq44U1gzLWgtV0VBaTQ
+  version: 0.1
 - name : Record
   g_folder: Record
   g_mapping_file: Record Mapping
@@ -113,9 +113,9 @@ version: 0.1
   use_cases_url:
   version: 0.1
 - name : TrainingMaterial
- g_folder: TrainingMaterial
- g_mapping_file: TrainingMaterial mapping
- status: revision
- spec_type: Profile
- use_cases_url:
- version: 0.2
+  g_folder: TrainingMaterial
+  g_mapping_file: TrainingMaterial mapping
+  status: revision
+  spec_type: Profile
+  use_cases_url:
+  version: 0.2
