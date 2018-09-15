@@ -34,14 +34,14 @@ Before starting, please ensure you have the following installed:
 1. Install Python dependencies using the command ```pip3 install -r requirements.txt```.
 1. Run the map2model module by executing the command ```python3 run.py```.
 1. After executing the ```run.py``` command a web browser will ask for a Google Account authentication. **Log in using the account you used for step 2.**
-1. Once complete, the specifications can be found in a subfolder inside *map2model > docs > spec_files* folder. There should be a folder for each specification listed in ```configuration.yml```.
+1. Once complete, the specifications can be found in a subfolder inside *map2model > spec2model* folder. There should be a folder for each specification listed in ```configuration.yml```.
 
 ### Update specifications repository
 
 1. Fork [Bioschemas specification repository](https://github.com/BioSchemas/specifications)
 1. Clone your fork to your local computer.
-1. If you added a new specification, copy the entire folder from *map2model > docs > spec_files* into the top level of the local copy of **specifications**.
-1. If you changed an existing specification copy the *specification.html* file from the specification subfolder in *map2model > docs > spec_files* into the appropriate specification folder in the local **specifications** repo.
+1. If you added a new specification, copy the entire folder from *map2model > spec2model* into the top level of the local copy of **specifications**.
+1. If you changed an existing specification copy the *specification.html* file from the specification subfolder in *map2model > spec2model* into the appropriate specification folder in the local **specifications** repo.
 1. Check everything is OK. If it is, commit your changes. Then push to the GitHub hosted version of your fork.
 1. Make a **Pull Request** of your specifications repository fork:
       - Go to the GitHub webpage and choose your fork of the main **specifications** repository.
