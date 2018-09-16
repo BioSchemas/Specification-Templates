@@ -1,8 +1,6 @@
-from rdflib import ConjunctiveGraph
-from openpyxl import load_workbook
-import requests
-import gspread
-
+import os
+import csv
+import sys
 
 def __get_class_name(temp_uri):
     return temp_uri.replace("http://schema.org/","")
@@ -236,20 +234,33 @@ def get_mapping_properties(spec_type):
     return type_properties
 
 
-class WorkbookParser:
-    spec_metadata = {}
-    bsc_specification = {}
+class MappingParser:
+    metadata = {}
 
-    def __init__(self, workbook):
-        if os.path.exists(workbook)
-            workbook = load_workbook(workbook)
-        self.workbook = workbook
+    def __init__(self, metadata=None):
+        if metadata != None:
+            self.metadata = metadata
 
-    def set_gsheet_id(self, gsheet_id):
-        self.gsheet_id = gsheet_id
+    def set_metadata(self, metadata):
+        self.metadata = metadata
 
-    def set_spec_metadata(self, spec_metadata):
-        self.spec_metadata = spec_metadata
+    def load_tsv(self, filename):
+        '''load a tsv file using the csv default provided reader!
+
+           Parameters
+           ==========
+           filename: the file name to load, will return list (rows) of
+           lists (columns)
+        '''
+        rows = []
+        with open(filename,'r') as tsv:
+            content = csv.reader(tsv, delimiter='\t')
+            for row in content:
+                if row:
+                    rows.append(row)
+
+        return rows
+
 
     def check_url(self, spec_url):
         '''check_url doesn't exit if the address isn't found, etc.
@@ -264,22 +275,31 @@ class WorkbookParser:
         else:
             return spec_url
 
-    def __get_mapping_description(self, workbook=None):
+    def get_description(self, mapping_file=None, spec_file=None):
 
-        if not workbook:
-            workbook = self.workbook
+        if not mapping_file:
+            mapping_file = self.metadata['mapping_file']
+
+        if not spec_file:
+            spec_file = self.metadata['specification_file']
+
+        # Read in both
+        spec_sheet = self.load_tsv(spec_file)
+        mapping_sheet = self.load_tsv(mapping_file)
+
+        #TODO: do we want to validate content first? YES
 
         # Generate values in advance
-        name = self.spec_metadata['name']
+        name = self.metadata['name']
         gh_base = 'https://github.com/BioSchemas/specifications/tree/master'
-        use_cases_url = self.spec_metadata['use_cases_url']
+        use_cases_url = self.metadata['use_cases_url']
 
         mapping_description = {}
         mapping_description['name'] = name
         print("Parsing %s Workbook" % mapping_description['name'])
 
-        mapping_description['status'] = self.spec_metadata['status']
-        mapping_description['spec_type'] = self.spec_metadata['spec_type']
+        mapping_description['status'] = self.metadata['status']
+        mapping_description['spec_type'] = self.metadata['spec_type']
 
         # Github Future Links
         mapping_description['gh_folder'] = '%s/%s' % (gh_base, name)
@@ -289,27 +309,24 @@ class WorkbookParser:
 
         mapping_description['edit_url']='%s/%s/specification.html' % (gh_base, name)
         mapping_description['use_cases_url'] = self.check_url(use_cases_url)
-        mapping_description['version'] = self.spec_metadata['version']
+        mapping_description['version'] = self.metadata['version']
         
         # TODO: I don't know where to get this
         mapping_description['parent_type'] = 'CreativeWork'
 
-        # These are from the workbook
-        #TODO:WARNING this is too error prone!
-        if "Specification Info" in workbook:
-            mapping_sheet = workbook.get_sheet_by_name('Specification Info')
-            mapping_description['subtitle'] = mapping_sheet.cell('B3').value
-            mapping_description['description'] = mapping_sheet.cell('c3').value
+        # Parse specification file
+        mapping_description['subtitle'] = spec_sheet.cell('B3').value
+        mapping_description['description'] = spec_sheet.cell('c3').value
         return mapping_description
 
-    def get_mapping(self):
+    def get_mapping(self, mapping_sheet=None):
 
-        print("Parsing %s." % self.spec_metadata['name'])
+        print("Parsing %s." % self.metadata['name'])
 
-        # STOPPED HERE - this Google sheet id does not exist
-        # mapping_sheet = client.open_by_key(self.gsheet_id).get_worksheet(0)
+        if mapping_sheet is None:
+            mapping_sheet = self.metadata['mapping_file']
 
-        spec_description = self.__get_mapping_description(mapping_sheet)
+        spec_description = self.get_description(mapping_sheet)
         sdo_props = get_properties_in_hierarchy(spec_description['parent_type'])
 
         spec_description['hierarchy'] = get_hierarchy(sdo_props)

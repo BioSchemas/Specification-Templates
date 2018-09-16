@@ -13,7 +13,7 @@ Comments on each specification should be done through the *GitHub issues* tool w
 ![map2model workflow](docs/img/map2model_workflow.png)
 > If you want to modify the Flow Chart open the [xml file](docs/img/map2model_workflow.xml) and name it `map2model_workflow.png` in the *doc > img*.
 
-## Run map2model on your computer
+## Usage
 
 ### Requirements
 
@@ -48,16 +48,17 @@ If you want to add a specification, add an entry to [spec2model/configuration.ym
   version: 0.2.0
 ```
 
-And importantly, the following expectations will be tested:
+Importantly, the following expectations will be tested:
+
   1. you have created a `_NameOfMySpec` folder under [specifications](specifications)
-  2. you have copied the mapping template [specifications/_templates_/Template_mapping.xlsx](specifications/_templates_/mapping.xlsx) into your `NameOfMySpec` folder and named it `NameOfMySpec_Mapping.xlsx`.
-  3. You are using a correct version string (e.g., 0.2.0 and not 0.2 or v0.2, etc.)
+  2. you have created your mapping files and added them to this folder. We provide a [Google Drive sheets template](https://docs.google.com/spreadsheets/d/1Ty69GRzc3xuvfpEIRHjfl_9L25MNFfrKXCdwrpxYslo/edit?usp=sharing) that you can use to do this, and simply export each sheet as .tsv (tab separated values). This means that four files should go into your `_NameOfMySpec` folder. For detailed instruction, see [the Specification Creation](#create-a-specification) section below.
+  3. You will be able to run validation functions over these files to check their quality.
 
 While your specification is a draft, the name of the folder will start with an underscore (`_NameOfMySpec`). When you are done, remove the underscore (`NameOfMySpec`).
 
 When you are finished with your spec, run the script to generate files in *map2model > docs > spec_files*. Check that your folder is present! Next, you will want to open a pull request (PR) to update the repository.
 
-### Update specifications repository
+### Updating Specifications
 
 1. Fork [Bioschemas specification repository](https://github.com/BioSchemas/specifications)
 1. Clone your fork to your local computer.
@@ -74,3 +75,17 @@ When you are finished with your spec, run the script to generate files in *map2m
 1. Wait until your **Pull Request** is merged into [Bioschemas Web](https://github.com/BioSchemas/bioschemas.github.io)
       > To preserve [Bioschemas Web Page](http://bioschemas.org), changes to [bioschemas.github.io repository](https://github.com/BioSchemas/bioschemas.github.io) will be issued by Bioschemas Web Master.
 1. Check your changes at [Specifications Bioschemas Web section](htt://bioschemas.org/bsc_specs)
+
+### Create a Specification
+
+Your workflow is going to be simple. You will:
+
+ 1. generate tab separated value files from templates provided on Google Drive
+ 2. add the files to a new specification folder here
+ 3. commit to the Github repository you have forked and cloned, and issue a pull request akin to [Updating Specifications](#updating-specifications)
+
+copied the mapping template files for Authors, Specification Info, Bioschemas Fields, and Schema.org Mapping into the folder. If you haven't created your tempates yet, you can generate them [from] this template](https://docs.google.com/spreadsheets/d/1Ty69GRzc3xuvfpEIRHjfl_9L25MNFfrKXCdwrpxYslo/edit?usp=sharing) and simply export each sheet as .tsv (tab separated values). This means that four files should go into your `NameOfMySpec` folder: 
+    - `NameOfMySpec_Mapping.tsv`
+    - `NameOfMySpec_BioschemasFields.tsv`
+    - `NameOfMySpec_Specification.tsv`
+    - `NameOfMySpec_Authors.tsv`

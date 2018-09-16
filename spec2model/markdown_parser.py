@@ -1,7 +1,6 @@
-import spec2model.file_manager as f_manager
-import spec2model.mapping as mapper
-import spec2model.workbook_validator as validator
-from openpyxl import load_workbook
+from spec2model.file_manager import FolderDigger
+from spec2model.mapping import MappingParser
+from spec2model.validator import FolderValidator
 import frontmatter
 import os
 import sys
@@ -15,9 +14,8 @@ class FrontMatterParser:
     def __init__(self, input_folder='specifictions'):
         self.__check_input_folder(input_folder)
         self.md_files_path = 'docs/spec_files/'
-        self.bsc_file_manager = f_manager.FolderDigger()
-        self.bsc_parser = mapper.WorkbookParser()
-        self.validator = validator.WorkbookValidator
+        self.file_manager = FolderDigger()
+        self.parser = MappingParser()
 
     def __check_input_folder(self, input_folder):
         '''check for the existence of the input folder, and ensure full path
@@ -33,22 +31,24 @@ class FrontMatterParser:
             sys.exit(1)
         print('Found %s' % input_folder)
 
-    def __get_all_specs_dict(self):
-        '''return listing of specs, meaning loaded workbooks. We don't validate
-           the workbooks here. It's expected that self.bsc_spec_list is a dictionary
-           of specs, with keys as folder names and values as parameters, one of which
-           is the 'mapping_file'
+    def __get_specs_list(self):
+        '''return listing of specs, meaning loaded workbooks. The workbooks should
+           already be validated by the file manager, and so we don't do it here.
+           Each entry in the specs_list is a dictionary that includes paths to:
+           mapping_file, bioschemas_file, specification_file, and authors_file.
         '''
         all_specs = dict()
 
-        for bsc_spec, bsc_params in self.bsc_spec_list.items():
+        for name, params in self.specs_list.items():
 
             # Save metadata with workbook parser, in case we need it
-            self.bsc_parser.set_spec_metadata(bsc_params)
+            self.parser.set_metadata(params)
 
             # Generate the mapping from the workbook
-            mapping_file = bsc_params['mapping_file']
-            all_specs[bsc_spec] = self.bsc_parser.get_mapping(mapping_file)
+            mapping_file = params['mapping_file']
+
+            # STOPPED HERE - dinosaur write function to parse new tsv mapping file!
+            all_specs[name] = self.parser.get_mapping(mapping_file)
 
         return all_specs
 
@@ -146,19 +146,11 @@ class FrontMatterParser:
         readme_file.write("> These files were generated using [map2model](https://github.com/BioSchemas/map2model) Python Module.")
         readme_file.close()
 
-========        # Perform validations first
-        for spec_field in spec_workbook:
-            validator = self.validator(spec_workbook)
-            if validator.check_exists_worksheet('Specification Info'):
-
-            spec_metadata[spec_field]=spec_dic[spec_field]
-===========
-
     def parse_front_matter(self):
 
         # Dictionary of the entries in configuration.yml with folder name as index
-        self.bsc_spec_list = self.bsc_file_manager.get_specification_list(self.input_folder)
-        all_specs = self.__get_all_specs_list()
+        self.specs_list = self.file_manager.get_specification_list(self.input_folder)
+        all_specs = self.__get_specs_list()
 
         for spec_dict in all_specs:
 
