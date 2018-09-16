@@ -46,7 +46,7 @@ If you want to add a specification, add an entry to [spec2model/configuration.ym
   spec_type: Profile
   use_cases_url:
   version: 0.2.0
-  parent_type: CreativeType
+  parent_type: CreativeWork
 ```
 
 Importantly, the following expectations will be tested:
