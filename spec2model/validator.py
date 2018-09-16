@@ -1,4 +1,4 @@
-from openpyxl import load_workbook
+from spec2model.mapping import load_tsv
 import os
 import sys
 
@@ -22,7 +22,8 @@ class FolderValidator:
            otherwise True
         '''
         results = [self.validate_exists(folder),
-                   self.validate_files()]
+                   self.validate_paths(),
+                   self.validate_headers()]
 
         for result in results:
             if result == False:
@@ -44,7 +45,7 @@ class FolderValidator:
             return False
         return True
 
-    def validate_files(self, ext='tsv'):
+    def validate_paths(self, ext='tsv'):
         '''Ensure that default files (self.defaults) exist in the folder
            (self.folder) 
         '''
@@ -58,6 +59,29 @@ class FolderValidator:
             if not os.path.exists(path):
                 print('Invalid: Cannot find %s' % path)
                 return False
+        return True
+
+    def validate_headers(self):
+        '''Ensure that headers for specific files only conform to those
+           required and expected 
+        '''
+        paths = self.defaults.get_paths()
+        for key, path in paths.items():
+
+            # This is a list of lists, the first list is the header row
+            content = load_tsv(path)
+            found = content[0]
+
+            # Default headers expected, including capitalization
+            headers = self.defaults.get_headers(key)
+
+            # Missing or extra currently not allowed
+            missing_headers = [x for x in headers if x not in found]
+            extra_headers = [x for x in found if x not in headers]
+            if len(missing_headers) + len(extra_headers) > 0:
+                print('Invalid: Extra or missing headers for %s' % path)
+                return False
+
         return True
 
     def validate_extension(self, path, ext='tsv'):
@@ -86,6 +110,16 @@ class WorksheetDefaults:
     def get_paths(self):
         return self.paths
 
+    def load_name(self, name):
+        '''load a tsv based on its name, the key in the self.paths lookup
+        
+        Parameters
+        ==========
+        name: the file key to load.
+        '''
+        if name in self.paths:
+            return load_tsv(self.paths[name])
+
     def set_paths(self, folder=None):
         '''define expected set of file (fullpath) from names lookup with
            a folder name.
@@ -113,3 +147,34 @@ class WorksheetDefaults:
                   'bioschemas_file': '%s - Bioschemas.%s' % (name, ext),
                   'authors_file': '%s - Authors.%s' % (name, ext)}
         return lookup
+
+
+    def get_headers(self, key):
+        '''get a headers list for a particular key in the names of
+           defaults.
+   
+           Parameters
+           ==========
+           key: the key in the self.lookup to get default headers for
+        '''
+        headers = {'specification_file': ['Title',
+                                          'Subtitle',
+                                          'Description',
+                                          'Version',
+                                          'Official Type',
+                                          'Full Example'],
+
+                   'bioschemas_file': ["Property",
+                                       "Expected Type",
+                                       "Description",
+                                       "Type",
+                                       "Type URL",
+                                       "BSC Description",
+                                       "Marginality",
+                                       "Cardinality",
+                                       "Controlled Vocabulary",
+                                       "Example"]}
+
+        if key in self.lookup:
+            if key in headers:
+                return headers[key]

@@ -2,6 +2,28 @@ import os
 import csv
 import sys
 
+# Loading Functions
+
+def load_tsv(filename):
+    '''load a tsv file using the csv default provided reader!
+
+       Parameters
+       ==========
+       filename: the file name to load, will return list (rows) of
+       lists (columns)
+    '''
+    rows = []
+    with open(filename,'r') as tsv:
+        content = csv.reader(tsv, delimiter='\t')
+        for row in content:
+            if row:
+                rows.append(row)
+
+    return rows
+
+
+# RDF Functions
+
 def __get_class_name(temp_uri):
     return temp_uri.replace("http://schema.org/","")
 
@@ -126,14 +148,15 @@ def __get_row_value(field, cols, headers, clean=True):
         value = value.strip().replace('\n', '')
     return value
 
-def __get_dict_from_sheet_row(cols, headers):
+def get_dict_from_row(row, headers):
 
-    property_as_dic = {}
+    props = {}
 
     # Set Bioschemas attributes
-    property_as_dic['bsc_dec'] = get_row_value('BSC Description', cols, headers)
-    property_as_dic['marginality'] = c_property['Marginality'].replace('\n', ' ')
-    property_as_dic['cardinality'] = c_property['Cardinality'].strip().strip('\n').replace('\n', ' ')
+    # STOPPED HERE - need to next fix up these functions
+    props['bsc_dec'] = get_row_value('BSC Description', cols, headers)
+    props['marginality'] = c_property['Marginality'].replace('\n', ' ')
+    props['cardinality'] = c_property['Cardinality'].strip().strip('\n').replace('\n', ' ')
     temp_cont_vocab = c_property['Controlled Vocabulary'].strip().replace('\n', ' ')
     property_as_dic['controlled_vocab'] = _parse_controlled_vocabulary(temp_cont_vocab)
 
@@ -198,37 +221,33 @@ def get_formatted_props(sdo_props, mapping_props, spec_name, spec_type):
     return {'properties': all_props}
 
 
-def get_mapping_properties(spec_type):
-    mapping_sheet = self.workbook.get_sheet_by_name('Bioschemas fields')
+def get_mapping_properties(bioschemas_file=None, spec_type):
+    '''get_mapping_properties
+       use the bioschemas field file and the specification type to
+       return a list of type properties. The bioschemas file 
+       should already be validated for correct headers.
+
+       Parameters
+       ==========
+       bioschemas_file: the <Template> - Bioschemas.tsv file
+       spec_type: the "spec_type" field in <Template> - Specification.tsv
+    '''
+
+    if not bioschemas_file:
+        bioschemas_file = self.metadata['bioschemas_file']
+
+    rows = load_tsv(bioschemas_file)
+    headers = rows[0]
     type_properties = []
-    row = 4
-
-    #TODO: WARNING:also very error prone!
-    headers = {"Property":0,
-               "Expected Type":1,
-               "Description":2,
-               "Type":3,
-               "Type URL":4,
-               "BSC Description":5,
-               "Marginality":6,
-               "Cardinality":7,
-               "Controlled Vocabulary":8,
-               "Example":9}
-
-    while True:
-
-        #TODO: using excel is highly problematic - need to have raw csv with just text!
-        cols = mapping_sheet.rows[row][0:9]
-
-        # Break if the row is empty        
-        if not any([x.internal_value for x in cols]):
-            print('Finished parsing sheet at row %s' % row)
-            break
+    
+    for r in range(1,len(rows)):
+        row = rows[r]
+        
+        # If we want to do checks for empty cells, do it here
 
         # If Expected Type, Marginality, and Cardinaity isn't empty 
-        if cols[1] != "" and cols[6] != "" and cols[7] != "":
-            print("Parsing %s property from Workbook." % headers["Property"])
-            property_as_dic = __get_dict_from_sheet_row(cols, headers)
+        if row[1] != "" and rows[6] != "" and rows[7] != "":
+            property_dict = get_dict_from_row(row, headers)
             type_properties.append(property_as_dic)
 
     return type_properties
@@ -244,23 +263,6 @@ class MappingParser:
     def set_metadata(self, metadata):
         self.metadata = metadata
 
-    def load_tsv(self, filename):
-        '''load a tsv file using the csv default provided reader!
-
-           Parameters
-           ==========
-           filename: the file name to load, will return list (rows) of
-           lists (columns)
-        '''
-        rows = []
-        with open(filename,'r') as tsv:
-            content = csv.reader(tsv, delimiter='\t')
-            for row in content:
-                if row:
-                    rows.append(row)
-
-        return rows
-
 
     def check_url(self, spec_url):
         '''check_url doesn't exit if the address isn't found, etc.
@@ -275,70 +277,77 @@ class MappingParser:
         else:
             return spec_url
 
-    def get_description(self, mapping_file=None, spec_file=None):
-
-        if not mapping_file:
-            mapping_file = self.metadata['mapping_file']
+    def get_description(self, spec_file=None):
 
         if not spec_file:
             spec_file = self.metadata['specification_file']
 
-        # Read in both
-        spec_sheet = self.load_tsv(spec_file)
-        mapping_sheet = self.load_tsv(mapping_file)
-
-        #TODO: do we want to validate content first? YES
+        # Read in both, these are already validated
+        spec_sheet = load_tsv(spec_file)
 
         # Generate values in advance
         name = self.metadata['name']
         gh_base = 'https://github.com/BioSchemas/specifications/tree/master'
         use_cases_url = self.metadata['use_cases_url']
 
-        mapping_description = {}
-        mapping_description['name'] = name
-        print("Parsing %s Workbook" % mapping_description['name'])
+        description = {}
+        description['name'] = name
+        print("Parsing %s Workbook" % description['name'])
 
-        mapping_description['status'] = self.metadata['status']
-        mapping_description['spec_type'] = self.metadata['spec_type']
+        description['status'] = self.metadata['status']
+        description['spec_type'] = self.metadata['spec_type']
 
         # Github Future Links
-        mapping_description['gh_folder'] = '%s/%s' % (gh_base, name)
-        mapping_description['gh_mapping_url'] = '%s/%s/%s_Mapping.xlsx' % (gh_base, name, name)
-        mapping_description['gh_examples']= '%s/%s/examples' % (gh_base, name)
-        mapping_description['gh_tasks'] = 'https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+ name
+        description['gh_folder'] = '%s/%s' % (gh_base, name)
+        description['gh_examples']= '%s/%s/examples' % (gh_base, name)
+        description['gh_tasks'] = 'https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+ name
 
-        mapping_description['edit_url']='%s/%s/specification.html' % (gh_base, name)
-        mapping_description['use_cases_url'] = self.check_url(use_cases_url)
-        mapping_description['version'] = self.metadata['version']
-        
-        # TODO: I don't know where to get this
-        mapping_description['parent_type'] = 'CreativeWork'
+        description['edit_url']='%s/%s/specification.html' % (gh_base, name)
+        description['use_cases_url'] = self.check_url(use_cases_url)
+        description['version'] = self.metadata['version']
+        description['parent_type'] = self.metadata.get('parent_type', 'Thing')
 
         # Parse specification file
-        mapping_description['subtitle'] = spec_sheet.cell('B3').value
-        mapping_description['description'] = spec_sheet.cell('c3').value
-        return mapping_description
+        description['subtitle'] = spec_sheet[1][1]
+        description['description'] = spec_sheet[1][2]
+        return description
 
-    def get_mapping(self, mapping_sheet=None):
+    def get_mapping(self, mapping_sheet=None,
+                          spec_sheet=None, 
+                          bioschemas_sheet=None):
+        '''get a mapping, meanng the full properties given a specification sheet
+           and a bioschemas sheet. If files aren't provided, the defaults defined
+           at self.defaults.paths are used.
+
+           Parameters
+           ==========
+           spec_sheet: the sheet with basic information (description, name, etc.)
+           bioschemas_sheet: sheet (tsv) with bioschemas fields
+        '''
 
         print("Parsing %s." % self.metadata['name'])
 
-        if mapping_sheet is None:
-            mapping_sheet = self.metadata['mapping_file']
+        spec_description = self.get_description(spec_sheet)
 
-        spec_description = self.get_description(mapping_sheet)
-        sdo_props = get_properties_in_hierarchy(spec_description['parent_type'])
+        try:
+            ptype = spec_description['parent_type']
+            sdo_props = get_properties_in_hierarchy(ptype)
+        except IndexError as e:
+            print('Error finding parent structure! Is %s a valid entity?' %ptype)
+            sys.exit(1)
 
         spec_description['hierarchy'] = get_hierarchy(sdo_props)
         spec_description['hierarchy'].reverse()
         print_hierarchy = ' > '.join(spec_description['hierarchy'])
         print("Prepared schema.org properties for hierarchy %s" % print_hierarchy)
         print("Classifing %s properties" % spec_description['name'])
-        mapping_props = get_mapping_properties(mapping_sheet,
+        mapping_props = get_mapping_properties(bioschemas_sheet,
                                                spec_description['spec_type'])
 
-
-        formatted_props = get_formatted_props(sdo_props, mapping_props, spec_description['name'], spec_description['spec_type'])
+        formatted_props = get_formatted_props(sdo_props, 
+                                              mapping_props, 
+                                              spec_description['name'], 
+                                              spec_description['spec_type'])
 
         spec_description.update(formatted_props)
 
