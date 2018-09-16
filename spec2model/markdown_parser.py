@@ -2,19 +2,32 @@ import spec2model.file_manager as f_manager
 import spec2model.mapping as mapper
 import frontmatter
 import os
+import sys
 from io import BytesIO
-
 
 class FrontMatterParser:
     md_files_path = ''
     bsc_parser = ''
     bsc_spec_list = ''
-    creds_file_path='spec2model/mycreds.txt'
 
-    def __init__(self):
-        self.md_files_path='docs/spec_files/'
+    def __init__(self, input_folder='specifictions'):
+        self.__check_input_folder(input_folder)
+        self.md_files_path = 'docs/spec_files/'
         self.bsc_file_manager = f_manager.FolderDigger()
-        self.bsc_parser = mapper.GSheetsParser()
+
+    def __check_input_folder(self, input_folder):
+        '''check for the existence of the input folder, and ensure full path
+           
+           Parameters
+           ==========
+           input_folder: path (relative or full) to input folder with specification
+           subdirectories.
+        '''
+        self.input_folder = os.path.abspath(input_folder)
+        if not os.path.exists(input_folder):
+            print('Cannot find %s' % input_folder)
+            sys.exit(1)
+        print('Found %s' % input_folder)
 
     def __get_all_specs_dic(self):
         all_specs =[]
@@ -74,7 +87,7 @@ class FrontMatterParser:
 
     def parse_front_matter(self):
 
-        self.bsc_spec_list = self.bsc_file_manager.get_specification_list()
+        self.bsc_spec_list = self.bsc_file_manager.get_specification_list(self.input_folder)
         all_specs_formatted=self.__get_all_specs_dic()
 
         for formatted_spec in all_specs_formatted:

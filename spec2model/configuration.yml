@@ -1,120 +1,86 @@
 specifications:
 - name: Beacon
-  g_folder: Beacon
-  g_mapping_file: Beacon Mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.2
 - name : BioChemEntity
-  g_folder: BioChemEntity
-  g_mapping_file: BioChemEntity Mapping
   status: revision
   spec_type: Type
   use_cases_url:
   version: 0.2
 - name : Chemical
-  g_folder: Chemical
-  g_mapping_file: Chemical mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.1
 - name : ChemicalStructure
-  g_folder: ChemicalStructure
-  g_mapping_file: ChemicalStructure mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.1
 - name : Course
-  g_folder: Course
-  g_mapping_file: mapping_course
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.1
 - name : DataCatalog
-  g_folder: DataCatalog
-  g_mapping_file: DataCatalog Mapping
   status: revision
   spec_type: Profile
   use_cases_url: https://docs.google.com/spreadsheets/d/1XzrZxFIuG3TS9RU8vACoUjAvaADLmI_FrIk7O3BEkxY/edit#gid=1439268036
   version: 0.2
 - name : Dataset
-  g_folder: Dataset
-  g_mapping_file: Dataset Mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.2
 - name : Event
-  g_folder: Event
-  g_mapping_file: Event mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.1
 - name : LabProtocol
-  g_folder: LabProtocol
-  g_mapping_file: LabProtocol Mapping
   status: revision
   spec_type: Type
   use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
   version: 0.1   
 - name : LabProtocol
-  g_folder: LabProtocol
-  g_mapping_file: LabProtocol Mapping
   status: revision
   spec_type: Profile
   use_cases_url: https://docs.google.com/a/ebi.ac.uk/document/d/1EZ_U2u2aJH_ERsoecaJRAJkWVHYGU2SK8HYSjvhEaMM/edit?usp=sharing
   version: 0.1
 #### need mapping files for metrics, organization & person
 - name : Protein
-  g_folder: Protein
-  g_mapping_file: Protein Mapping
   status: revision
   spec_type: Profile
   use_cases_url: https://docs.google.com/document/d/1MNU-r7CMAvKdGav1VT3XeyQXr2XwRA6JXDsoWoA0R1E
   version: 0.4
 - name : ProteinAnnotation
-  g_folder: ProteinAnnotation
-  g_mapping_file: ProteinAnnotation Mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.4
 - name : ProteinStructure
-  g_folder: ProteinStructure
-  g_mapping_file: Protein Structure Mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.4
 - name : DataRecord
-  g_folder: Record
-  g_mapping_file: Record Mapping
   status: revision
   spec_type: Type
   use_cases_url: https://drive.google.com/drive/folders/0B0fE3oOZIq44U1gzLWgtV0VBaTQ
   version: 0.1
 - name : Record
-  g_folder: Record
-  g_mapping_file: Record Mapping
   status: revision
   spec_type: Profile
   use_cases_url: https://drive.google.com/drive/folders/0B0fE3oOZIq44U1gzLWgtV0VBaTQ
   version: 0.1
 - name : Tool
-  g_folder: Tool
-  g_mapping_file: Tool Mapping
   status: revision
   spec_type: Profile
   use_cases_url:
   version: 0.1
 - name : TrainingMaterial
-  g_folder: TrainingMaterial
-  g_mapping_file: TrainingMaterial mapping
   status: revision
   spec_type: Profile
   use_cases_url:
