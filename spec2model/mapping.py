@@ -1,7 +1,7 @@
+from rdflib import ConjunctiveGraph
+from openpyxl import load_workbook
 import requests
 import gspread
-from pydrive.auth import GoogleAuth
-from rdflib import ConjunctiveGraph
 
 
 def __get_class_name(temp_uri):
@@ -208,41 +208,20 @@ def get_mapping_properties(mapping_sheet, spec_type):
     return type_properties
 
 
-class GSheetsParser:
-    gsheet_id = ''
-    cred_file = ''
-    gauth = "This variable will have the Google Authorization file"
-    scope = []
-    spec_metadata={}
+class WorkbookParser:
+    spec_metadata = {}
     bsc_specification = {}
 
-    def __init__(self):
-        self.gsheet_id = '1h0-fgqnRe25-tVCmu2yWNQjthLzgkW4a1TVNMpCABlc'
-        #self.cred_file = 'client_secrets.json'
-        #self.scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        self.spec_metadata={}
-        self.bsc_specification = {}
-        creds_path="spec2model/mycreds.txt"
-        self.gauth = GoogleAuth()
-        # Try to load saved client credentials
-        self.gauth.LoadCredentialsFile(creds_path)
-        if self.gauth.credentials is None:
-            # Authenticate if they're not there
-            self.gauth.LocalWebserverAuth()
-        elif self.gauth.access_token_expired:
-            # Refresh them if expired
-            self.gauth.Refresh()
-        else:
-            # Initialize the saved creds
-            self.gauth.Authorize()
-            # Save the current credentials to a file
-            self.gauth.SaveCredentialsFile(creds_path)
+    def __init__(self, workbook):
+        if os.path.exists(workbook)
+            workbook = load_workbook(workbook)
+        self.workbook = workbook
 
     def set_gsheet_id(self, gsheet_id):
         self.gsheet_id = gsheet_id
 
     def set_spec_metadata(self, spec_metadata):
-        self.spec_metadata=spec_metadata
+        self.spec_metadata = spec_metadata
 
     def check_url(self, spec_url):
         if spec_url==None: return "err_404"
@@ -271,11 +250,15 @@ class GSheetsParser:
         mapping_description['parent_type'] = mapping_sheet.acell('A6').value[8:].strip()
         return mapping_description
 
-    def get_mapping_g_sheets(self):
+    def get_mapping(self):
 
-        client = gspread.authorize(self.gauth.credentials)
+        # We wil want to load the workbook as follows
+        #bsc_workbook = load_workbook(self.spec_metadata['mapping_file'])
+        #bsc_workbook.code_name = bsc_spec
 
-        print("Parsing %s file." % self.spec_metadata['g_mapping_file'])
+        print("Parsing %s." % self.spec_metadata['name'])
+
+        # STOPPED HERE - this Google sheet id does not exist
         mapping_sheet = client.open_by_key(self.gsheet_id).get_worksheet(0)
 
         spec_description = self.__get_mapping_description(mapping_sheet)

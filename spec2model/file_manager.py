@@ -25,9 +25,11 @@ class FolderDigger:
 
             # Only alert user if missing, other prints are distracting
             if os.path.exists(spec_folder):
+                current_config['spec_folder'] = spec_folder
                 spec_mapping_file = os.path.join(spec_folder, '%s_Mapping.xlsx' % spec_name)
                 if os.path.exists(spec_mapping_file):
                     specs_list[spec_name] = current_config
+                    current_config['mapping_file'] = spec_mapping_file
                 else:
                     print("Missing %s mapping file." % spec_name)
             else:
