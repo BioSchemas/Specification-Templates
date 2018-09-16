@@ -122,13 +122,18 @@ def _parse_controlled_vocabulary(temp_cont_vocab):
     return cv_parsed
 
 
-def __get_dic_from_sheet_row(c_property):
+def __get_row_value(field, cols, headers, clean=True):
+    value = cols[headers[field]].value
+    if clean is True:
+        value = value.strip().replace('\n', '')
+    return value
+
+def __get_dict_from_sheet_row(cols, headers):
 
     property_as_dic = {}
 
     # Set Bioschemas attributes
-
-    property_as_dic['bsc_dec'] = c_property['BSC Description'].strip().replace('\n', ' ')
+    property_as_dic['bsc_dec'] = get_row_value('BSC Description', cols, headers)
     property_as_dic['marginality'] = c_property['Marginality'].replace('\n', ' ')
     property_as_dic['cardinality'] = c_property['Cardinality'].strip().strip('\n').replace('\n', ' ')
     temp_cont_vocab = c_property['Controlled Vocabulary'].strip().replace('\n', ' ')
@@ -136,7 +141,6 @@ def __get_dic_from_sheet_row(c_property):
 
 
     # Set schema.org attributes
-
     property_as_dic['name'] = c_property['Property'].strip().strip('\n')
     property_as_dic['expected_type'] = get_expected_type(c_property['Expected Type'])
     property_as_dic['sdo_desc'] = c_property['Description'].strip().replace('\n', ' ')
@@ -196,15 +200,39 @@ def get_formatted_props(sdo_props, mapping_props, spec_name, spec_type):
     return {'properties': all_props}
 
 
-def get_mapping_properties(mapping_sheet, spec_type):
-    list_of_hashes = mapping_sheet.get_all_records(head=5)
+def get_mapping_properties(spec_type):
+    mapping_sheet = self.workbook.get_sheet_by_name('Bioschemas fields')
     type_properties = []
-    for c_property in list_of_hashes:
-        if(c_property['Expected Type']!="" # and c_property['Description']!=""
-           and c_property['Marginality']!="" and c_property['Cardinality']!=""):
-            print("Parsing %s property from Google Sheets." % c_property['Property'])
-            property_as_dic=__get_dic_from_sheet_row(c_property)
+    row = 4
+
+    #TODO: WARNING:also very error prone!
+    headers = {"Property":0,
+               "Expected Type":1,
+               "Description":2,
+               "Type":3,
+               "Type URL":4,
+               "BSC Description":5,
+               "Marginality":6,
+               "Cardinality":7,
+               "Controlled Vocabulary":8,
+               "Example":9}
+
+    while True:
+
+        #TODO: using excel is highly problematic - need to have raw csv with just text!
+        cols = mapping_sheet.rows[row][0:9]
+
+        # Break if the row is empty        
+        if not any([x.internal_value for x in cols]):
+            print('Finished parsing sheet at row %s' % row)
+            break
+
+        # If Expected Type, Marginality, and Cardinaity isn't empty 
+        if cols[1] != "" and cols[6] != "" and cols[7] != "":
+            print("Parsing %s property from Workbook." % headers["Property"])
+            property_as_dic = __get_dict_from_sheet_row(cols, headers)
             type_properties.append(property_as_dic)
+
     return type_properties
 
 
