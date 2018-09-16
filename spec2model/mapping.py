@@ -224,51 +224,73 @@ class WorkbookParser:
         self.spec_metadata = spec_metadata
 
     def check_url(self, spec_url):
-        if spec_url==None: return "err_404"
-        r=requests.get(spec_url)
-        if r==404:
+        '''check_url doesn't exit if the address isn't found, etc.
+           it just adds the string "err_404" as metadata given these cases.
+        '''
+        if spec_url is None: 
+            return "err_404"
+
+        response = requests.get(spec_url)
+        if response.status_code == 404:
             return "err_404"
         else:
             return spec_url
 
-    def __get_mapping_description(self, mapping_sheet):
+    def __get_mapping_description(self, workbook=None):
+
+        if not workbook:
+            workbook = self.workbook
+
+        # Generate values in advance
+        name = self.spec_metadata['name']
+        gh_base = 'https://github.com/BioSchemas/specifications/tree/master'
+        use_cases_url = self.spec_metadata['use_cases_url']
+
         mapping_description = {}
-        mapping_description['name']=self.spec_metadata['name']
-        print("Parsing %s Google Sheet" % mapping_description['name'])
-        mapping_description['g_mapping_file']=self.spec_metadata['g_mapping_file']
-        mapping_description['spec_mapping_url']=self.spec_metadata['spec_mapping_url']
-        mapping_description['status']=self.spec_metadata['status']
-        mapping_description['spec_type']=self.spec_metadata['spec_type']
-        mapping_description['gh_folder']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']
-        mapping_description['gh_examples']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']+'/examples'
-        mapping_description['gh_tasks']='https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+self.spec_metadata['name']
-        mapping_description['edit_url']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']+'/specification.html'
-        mapping_description['use_cases_url']=self.check_url(self.spec_metadata['use_cases_url'])
-        mapping_description['version']=self.spec_metadata['version']
-        mapping_description['subtitle'] = mapping_sheet.acell('B1').value
-        mapping_description['description'] = mapping_sheet.acell('B2').value
-        mapping_description['parent_type'] = mapping_sheet.acell('A6').value[8:].strip()
+        mapping_description['name'] = name
+        print("Parsing %s Workbook" % mapping_description['name'])
+
+        mapping_description['status'] = self.spec_metadata['status']
+        mapping_description['spec_type'] = self.spec_metadata['spec_type']
+
+        # Github Future Links
+        mapping_description['gh_folder'] = '%s/%s' % (gh_base, name)
+        mapping_description['gh_mapping_url'] = '%s/%s/%s_Mapping.xlsx' % (gh_base, name, name)
+        mapping_description['gh_examples']= '%s/%s/examples' % (gh_base, name)
+        mapping_description['gh_tasks'] = 'https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+ name
+
+        mapping_description['edit_url']='%s/%s/specification.html' % (gh_base, name)
+        mapping_description['use_cases_url'] = self.check_url(use_cases_url)
+        mapping_description['version'] = self.spec_metadata['version']
+        
+        # TODO: I don't know where to get this
+        mapping_description['parent_type'] = 'CreativeWork'
+
+        # These are from the workbook
+        #TODO:WARNING this is too error prone!
+        if "Specification Info" in workbook:
+            mapping_sheet = workbook.get_sheet_by_name('Specification Info')
+            mapping_description['subtitle'] = mapping_sheet.cell('B3').value
+            mapping_description['description'] = mapping_sheet.cell('c3').value
         return mapping_description
 
     def get_mapping(self):
 
-        # We wil want to load the workbook as follows
-        #bsc_workbook = load_workbook(self.spec_metadata['mapping_file'])
-        #bsc_workbook.code_name = bsc_spec
-
         print("Parsing %s." % self.spec_metadata['name'])
 
         # STOPPED HERE - this Google sheet id does not exist
-        mapping_sheet = client.open_by_key(self.gsheet_id).get_worksheet(0)
+        # mapping_sheet = client.open_by_key(self.gsheet_id).get_worksheet(0)
 
         spec_description = self.__get_mapping_description(mapping_sheet)
         sdo_props = get_properties_in_hierarchy(spec_description['parent_type'])
 
-        spec_description ['hierarchy']= get_hierarchy(sdo_props)
-        print("Prepared schema.org properties for hierarchy %s" % str(spec_description ['hierarchy']))
-
+        spec_description['hierarchy'] = get_hierarchy(sdo_props)
+        spec_description['hierarchy'].reverse()
+        print_hierarchy = ' > '.join(spec_description['hierarchy'])
+        print("Prepared schema.org properties for hierarchy %s" % print_hierarchy)
         print("Classifing %s properties" % spec_description['name'])
-        mapping_props = get_mapping_properties(mapping_sheet, spec_description['spec_type'])
+        mapping_props = get_mapping_properties(mapping_sheet,
+                                               spec_description['spec_type'])
 
 
         formatted_props = get_formatted_props(sdo_props, mapping_props, spec_description['name'], spec_description['spec_type'])
