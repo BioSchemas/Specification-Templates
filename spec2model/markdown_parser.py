@@ -41,18 +41,12 @@ class FrontMatterParser:
 
         for name, params in self.specs_list.items():
 
-            # Save metadata with workbook parser, in case we need it
             self.parser.set_metadata(params)
-
-            # Generate the mapping from the workbook
-            mapping_file = params['mapping_file']
-
-            # STOPPED HERE - dinosaur write function to parse new tsv mapping file!
-            all_specs[name] = self.parser.get_mapping(mapping_file)
+            all_specs[name] = self.parser.get_mapping()
 
         return all_specs
 
-    def __get_specification_post(self, spec_dict):
+    def __get_specification_post(self, spec_dict, skip_fields=None):
         '''for a spec_workbook, which is a dictionary with "name" "workbook" and "params"
            derive the post material, an html file that is mostly yaml metadata
  
@@ -67,12 +61,15 @@ class FrontMatterParser:
         spec_post = frontmatter.Post('')
 
         # Skip over set of pre-defined fields
-        # TODO: in future this should link to xlsx in Github repository
-        skip_fields = ['mapping_file']
+        if not skip_fields:
+            skip_fields = []
 
-        for spec_field in spec_dict['params']:
+        if not isinstance(skip_fields,list):
+            skip_fields = [skip_fields]
+
+        for spec_field in spec_dict:
             if spec_field not in skip_fields:
-                spec_metadata[spec_field] = spec_dict['params'][spec_field]
+                spec_metadata[spec_field] = spec_dict[spec_field]
 
         spec_post.metadata = spec_metadata
         return spec_post
@@ -117,50 +114,51 @@ class FrontMatterParser:
                workbook: the loaded workbook (or file to it)
                params: the original values in the configuration.yml for the folder
         '''
-        spec_md_file_path = os.path.join(spec_md_folder, 'README.md')
-        with open(spec_md_file_path, "w") as readme_file:
+        spec_md_file_path = os.path.join(spec_dir, 'README.md')
+        with open(spec_md_file_path, "w") as readme:
  
             # Look up some fields
-            name = spec_dict['params']['name']
-            version = spec_dict['params']['version']
-            spec_type = spec_dict['params']['type']
- 
-            readme_file.write("## %s specification v. %s \n\n" % (name, version))
-            readme_file.write("**%s** \n\n" % spec_type)
+            name = spec_dict['name']
+            version = spec_dict['version']
+            spec_type = spec_dict['spec_type']
+            hierarchy = spec_dict['hierarchy']
+            description = spec_dict['description'] 
+            subtitle = spec_dict['subtitle'].strip()
 
-        for i_pos, step_hier in enumerate(reversed(formatted_spec['hierarchy'])):
-            readme_file.write(step_hier)
-            if i_pos < len(formatted_spec['hierarchy'])-1:
-                readme_file.write(" > ")
-        if formatted_spec['spec_type'] == "Type":
-            readme_file.write(" > %s" % formatted_spec['name'])
-        readme_file.write("\n\n**%s** \n" % formatted_spec['subtitle'].strip())
-        readme_file.write("\n# Description \n")
-        readme_file.write("%s \n" % formatted_spec['description'])
-        readme_file.write("# Links \n")
-        readme_file.write("- [Specification](http://bioschemas.org/bsc_specs/%s/specification/)\n" % formatted_spec['name'])
-        readme_file.write("- [Specification source](specification.html)\n")
-        readme_file.write("- [Mapping Spreadsheet](%s)\n" % formatted_spec['spec_mapping_url'])
-        readme_file.write("- [Coding Examples](%s)\n" % formatted_spec['gh_examples'])
-        readme_file.write("- [GitHUb Issues](%s)\n" % formatted_spec['gh_tasks'])
-        readme_file.write("> These files were generated using [map2model](https://github.com/BioSchemas/map2model) Python Module.")
-        readme_file.close()
+            readme.write("## %s specification v. %s \n\n" % (name, version))
+            readme.write("**%s** \n\n" % spec_type)
 
+            for i_pos, step_hier in enumerate(reversed(hierarchy)):
+                readme.write(step_hier)
+                if i_pos < len(hierarchy)-1:
+                    readme.write(" > ")
+            if spec_type == "Type":
+                readme_file.write(" > %s" % name)
+            readme.write("\n\n**%s** \n" % subtitle)
+            readme.write("\n# Description \n")
+            readme.write("%s \n" % description)
+            readme.write("# Links \n")
+            readme.write("- [Specification](http://bioschemas.org/bsc_specs/%s/specification/)\n" % name)
+            readme.write("- [Specification source](specification.html)\n")
+            readme.write("- [Coding Examples](%s)\n" % spec_dict['gh_examples'])
+            readme.write("- [GitHUb Issues](%s)\n" % spec_dict['gh_tasks'])
+            readme.write("> These files were generated using [map2model](https://github.com/BioSchemas/map2model) Python Module.")
+        
     def parse_front_matter(self):
 
         # Dictionary of the entries in configuration.yml with folder name as index
         self.specs_list = self.file_manager.get_specification_list(self.input_folder)
         all_specs = self.__get_specs_list()
 
-        for spec_dict in all_specs:
+        for spec_name, spec_dict in all_specs.items():
 
             # Create frontmatter post object with basic metadata
             temp_spec_post = self.__get_specification_post(spec_dict)
 
-            if formatted_spec['spec_type'] == 'Type':
-                temp_spec_post.metadata['layout']= 'new_type_detail'
+            if spec_dict['spec_type'] == 'Type':
+                temp_spec_post.metadata['layout'] = 'new_type_detail'
             else:
-                temp_spec_post.metadata['layout']= 'new_spec_detail'
+                temp_spec_post.metadata['layout'] = 'new_spec_detail'
 
             md_fm_bytes = BytesIO()
             temp_spec_post.metadata['version'] = str(temp_spec_post.metadata['version'])
@@ -168,14 +166,15 @@ class FrontMatterParser:
             spec_name = temp_spec_post.metadata['name']
 
             # Create folder structure (examples) and README.md
-            spec_md_file_path = self.__create_spec_folder_struct(spec_name)
-            self.__write_README(spec_md_file_path, spec_dict)
+            spec_dir = self.__create_spec_folder_struct(spec_name)
+            self.__write_README(spec_dir, spec_dict)
 
-            with open(spec_md_file_path+ '/specification.html', 'w') as outfile:
-                temp_str=str(md_fm_bytes.getvalue(),'utf-8')
+            # Write the final markdown frontmatter to specification.html
+            with open(os.path.join(spec_dir, 'specification.html'), 'w') as outfile:
+                temp_str = str(md_fm_bytes.getvalue(),'utf-8')
                 outfile.write(temp_str)
                 outfile.close()
+
             print ('%s MarkDown file generated.' % temp_spec_post.metadata['name'])
-        os.remove(self.creds_file_path)
-        print('Goggle Drive connection closed and credit file deleted.')
-        print ('All Jekyll formatted MarkDown files generated.')
+
+        print('Generation Process Complete')

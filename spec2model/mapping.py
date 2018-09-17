@@ -107,9 +107,10 @@ def get_hierarchy(props_dic):
     return type_hierarchy
 
 
-# Function that receives an string with expected types and generates an array with each expected pype
 def get_expected_type(expected_types):
-
+    '''Function that receives an string with expected types
+       and generates an array with each expected type
+    '''
     expected_types = expected_types.strip()
     expected_types = expected_types.replace('\n', '')
     expected_types = expected_types.replace(' OR ', ' ')
@@ -117,8 +118,8 @@ def get_expected_type(expected_types):
     expected_types = expected_types.replace(',', '')
     list_of_types = expected_types.split(" ")
     i = 0
-    for type in list_of_types:
-        list_of_types[i] = type.strip()
+    for etype in list_of_types:
+        list_of_types[i] = etype.strip()
         i += 1
 
     return list_of_types
@@ -142,8 +143,13 @@ def _parse_controlled_vocabulary(temp_cont_vocab):
     return cv_parsed
 
 
-def __get_row_value(field, cols, headers, clean=True):
-    value = cols[headers[field]].value
+def get_row_value(field, row, headers, clean=True):
+    value = ''
+    for i in range(0, len(row)):
+        if headers[i] == field:
+            value = row[i]
+            break
+    
     if clean is True:
         value = value.strip().replace('\n', '')
     return value
@@ -153,23 +159,22 @@ def get_dict_from_row(row, headers):
     props = {}
 
     # Set Bioschemas attributes
-    # STOPPED HERE - need to next fix up these functions
-    props['bsc_dec'] = get_row_value('BSC Description', cols, headers)
-    props['marginality'] = c_property['Marginality'].replace('\n', ' ')
-    props['cardinality'] = c_property['Cardinality'].strip().strip('\n').replace('\n', ' ')
-    temp_cont_vocab = c_property['Controlled Vocabulary'].strip().replace('\n', ' ')
-    property_as_dic['controlled_vocab'] = _parse_controlled_vocabulary(temp_cont_vocab)
-
+    props['bsc_dec'] = get_row_value('BSC Description', row, headers)
+    props['marginality'] = get_row_value('Marginality', row, headers)
+    props['cardinality'] = get_row_value('Cardinality', row, headers)
+    temp_cont_vocab = get_row_value('Controlled Vocabulary', row, headers)
+    props['controlled_vocab'] = _parse_controlled_vocabulary(temp_cont_vocab)
 
     # Set schema.org attributes
-    property_as_dic['name'] = c_property['Property'].strip().strip('\n')
-    property_as_dic['expected_type'] = get_expected_type(c_property['Expected Type'])
-    property_as_dic['sdo_desc'] = c_property['Description'].strip().replace('\n', ' ')
-    print (property_as_dic['name'] + ':' + property_as_dic['sdo_desc'] +'\n')
-    if property_as_dic['sdo_desc'] is None:
-        property_as_dic['sdo_desc'] = ' ';
+    props['name'] = get_row_value('Property', row, headers)
+    props['expected_type'] = get_row_value('Expected Type', row, headers) 
+    props['expected_type'] = get_expected_type(props['expected_type'])
+    props['sdo_desc'] = get_row_value('Description', row, headers)
+    print (props['name'] + ':' + props['sdo_desc'] +'\n')
+    if props['sdo_desc'] is None:
+        props['sdo_desc'] = ' ';
 
-    return property_as_dic
+    return props
 
 
 def get_property_in_hierarchy(sdo_props, mapping_property):
@@ -177,7 +182,7 @@ def get_property_in_hierarchy(sdo_props, mapping_property):
     for hierarchy_level in sdo_props:
         if mapping_property['name'] in sdo_props[hierarchy_level].keys():
             prop_type = hierarchy_level
-            mapping_property['sdo_desc']=sdo_props[hierarchy_level][mapping_property['name']]['description']
+            mapping_property['sdo_desc'] = sdo_props[hierarchy_level][mapping_property['name']]['description']
     return {'type':prop_type, 'property': mapping_property}
 
 
@@ -221,7 +226,7 @@ def get_formatted_props(sdo_props, mapping_props, spec_name, spec_type):
     return {'properties': all_props}
 
 
-def get_mapping_properties(bioschemas_file=None, spec_type):
+def get_mapping_properties(bioschemas_file=None):
     '''get_mapping_properties
        use the bioschemas field file and the specification type to
        return a list of type properties. The bioschemas file 
@@ -230,7 +235,6 @@ def get_mapping_properties(bioschemas_file=None, spec_type):
        Parameters
        ==========
        bioschemas_file: the <Template> - Bioschemas.tsv file
-       spec_type: the "spec_type" field in <Template> - Specification.tsv
     '''
 
     if not bioschemas_file:
@@ -248,7 +252,7 @@ def get_mapping_properties(bioschemas_file=None, spec_type):
         # If Expected Type, Marginality, and Cardinaity isn't empty 
         if row[1] != "" and rows[6] != "" and rows[7] != "":
             property_dict = get_dict_from_row(row, headers)
-            type_properties.append(property_as_dic)
+            type_properties.append(property_dict)
 
     return type_properties
 
@@ -312,8 +316,7 @@ class MappingParser:
         description['description'] = spec_sheet[1][2]
         return description
 
-    def get_mapping(self, mapping_sheet=None,
-                          spec_sheet=None, 
+    def get_mapping(self, spec_sheet=None, 
                           bioschemas_sheet=None):
         '''get a mapping, meanng the full properties given a specification sheet
            and a bioschemas sheet. If files aren't provided, the defaults defined
