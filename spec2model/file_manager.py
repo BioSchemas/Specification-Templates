@@ -1,6 +1,6 @@
 import spec2model.config_manager as yml_manager
 from spec2model.validator import FolderValidator
-from spec2model.defaults import defaults
+import os
 
 class FolderDigger:
 

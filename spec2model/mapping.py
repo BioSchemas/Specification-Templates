@@ -1,5 +1,7 @@
-import os
+from rdflib import ConjunctiveGraph
 import csv
+import os
+import requests
 import sys
 
 # Loading Functions
@@ -226,7 +228,7 @@ def get_formatted_props(sdo_props, mapping_props, spec_name, spec_type):
     return {'properties': all_props}
 
 
-def get_mapping_properties(bioschemas_file=None):
+def get_mapping_properties(bioschemas_file):
     '''get_mapping_properties
        use the bioschemas field file and the specification type to
        return a list of type properties. The bioschemas file 
@@ -236,9 +238,6 @@ def get_mapping_properties(bioschemas_file=None):
        ==========
        bioschemas_file: the <Template> - Bioschemas.tsv file
     '''
-
-    if not bioschemas_file:
-        bioschemas_file = self.metadata['bioschemas_file']
 
     rows = load_tsv(bioschemas_file)
     headers = rows[0]
@@ -331,6 +330,8 @@ class MappingParser:
         print("Parsing %s." % self.metadata['name'])
 
         spec_description = self.get_description(spec_sheet)
+        if bioschemas_sheet is None:
+            bioschemas_sheet = self.metadata['bioschemas_file']
 
         try:
             ptype = spec_description['parent_type']
@@ -344,8 +345,7 @@ class MappingParser:
         print_hierarchy = ' > '.join(spec_description['hierarchy'])
         print("Prepared schema.org properties for hierarchy %s" % print_hierarchy)
         print("Classifing %s properties" % spec_description['name'])
-        mapping_props = get_mapping_properties(bioschemas_sheet,
-                                               spec_description['spec_type'])
+        mapping_props = get_mapping_properties(bioschemas_sheet)
 
         formatted_props = get_formatted_props(sdo_props, 
                                               mapping_props, 

@@ -37,7 +37,7 @@ def main():
     # Set the default specifications folder and configuration
     folder = args.specs
     if not folder:
-        folder = 'map2spec/specifications'
+        folder = 'specifications'
 
     outfolder = args.outfolder
     if not outfolder:
@@ -48,25 +48,22 @@ def main():
 
     config = args.config
     if not config:
-        config = os.path.join(folder, 'configuration.yml')
+        config = 'spec2model/configuration.yml'
         
     # Output folder we may need to make
     if not os.path.exists(outfolder):
         os.mkdir(outfolder)
 
     # Both must exist
-    for path in [config, folder]
+    for path in [config, folder]:
         if not os.path.exists(path):
             print('Error, %s not found.' % path)
             sys.exit(1)
 
 
-    def __init__(self, input_folder='specifictions', 
-                       output_folder='docs/spec_files/',
-                       config_file_path='spec2map/configuration.yml'):
-
-
-    bsc_md_parser = md_parser.FrontMatterParser()
+    bsc_md_parser = md_parser.FrontMatterParser(input_folder=folder,
+                                                output_folder=outfolder,
+                                                config_file_path=config)
     bsc_md_parser.parse_front_matter()
     
 

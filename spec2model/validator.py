@@ -22,12 +22,18 @@ class FolderValidator:
            otherwise True
         '''
         results = [self.validate_exists(folder),
-                   self.validate_paths(),
-                   self.validate_headers()]
+                   self.validate_paths()]
 
+
+        # First validate existing and paths
         for result in results:
-            if result == False:
-                return result
+            if not result:
+                return False
+
+        # Only then try to read files!
+        if not self.validate_headers():
+            return False
+
         return result
 
     def validate_exists(self, folder=None):
@@ -40,6 +46,7 @@ class FolderValidator:
         if folder is None:
             folder = self.folder
 
+        print('Looking for %s...' % folder)
         if not os.path.exists(folder):
             print('Invalid: Worksheet folder %s does not exist' % folder)
             return False
@@ -51,14 +58,16 @@ class FolderValidator:
         '''
         paths = self.defaults.get_paths()
         for key, path in paths.items():
-            # 1. If changed the defaults, we wouldn't be able to load
-            if not self.validate_extension(path, ext=ext):
-                return False
- 
-            # 2. The path must exist
+
+            # 1. The path must exist
             if not os.path.exists(path):
                 print('Invalid: Cannot find %s' % path)
                 return False
+
+            # 2. If changed the defaults, we wouldn't be able to load
+            if not self.validate_extension(path, ext=ext):
+                return False
+ 
         return True
 
     def validate_headers(self):
@@ -163,6 +172,23 @@ class WorksheetDefaults:
                                           'Version',
                                           'Official Type',
                                           'Full Example'],
+
+                   'mapping_file': ['Property',
+                                    'Expected Type',
+                                    'Description',
+                                    'Type',
+                                    'Type URL',
+                                    'BSC Description',
+                                    'Marginality',
+                                    'Cardinality',
+                                    'Controlled Vocabulary',
+                                    'Example'],
+
+                   'authors_file': ['Firstnames', 
+                                    'Surname', 
+                                    'Role', 
+                                    'Institution',
+                                    'Contribution'],
 
                    'bioschemas_file': ["Property",
                                        "Expected Type",

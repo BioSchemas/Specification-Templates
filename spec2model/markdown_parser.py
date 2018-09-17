@@ -20,7 +20,7 @@ class FrontMatterParser:
         '''
         self.__check_input_folder(input_folder)
         self.md_files_path = output_folder
-        self.file_manager = FolderDigger()
+        self.file_manager = FolderDigger(config_file_path)
         self.parser = MappingParser()
 
     def __check_input_folder(self, input_folder):
@@ -120,7 +120,7 @@ class FrontMatterParser:
                workbook: the loaded workbook (or file to it)
                params: the original values in the configuration.yml for the folder
         '''
-        spec_md_file_path = os.path.join(spec_dir, 'README.md')
+        spec_md_file_path = os.path.join(spec_md_folder, 'README.md')
         with open(spec_md_file_path, "w") as readme:
  
             # Look up some fields
@@ -183,4 +183,4 @@ class FrontMatterParser:
 
             print ('%s MarkDown file generated.' % temp_spec_post.metadata['name'])
 
-        print('Generation Process Complete')
+        print('Generation Process Complete. Output files are in %s' % self.md_files_path)
