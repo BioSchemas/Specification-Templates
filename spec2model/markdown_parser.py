@@ -11,9 +11,15 @@ class FrontMatterParser:
     bsc_parser = ''
     bsc_spec_list = ''
 
-    def __init__(self, input_folder='specifictions'):
+    def __init__(self, input_folder='specifictions', 
+                       output_folder='docs/spec_files/',
+                       config_file_path='spec2map/configuration.yml'):
+
+        '''defaults here are intended for running in spec2map repository. 
+           Use via run.py to edit for your needs.
+        '''
         self.__check_input_folder(input_folder)
-        self.md_files_path = 'docs/spec_files/'
+        self.md_files_path = output_folder
         self.file_manager = FolderDigger()
         self.parser = MappingParser()
 

@@ -2,14 +2,13 @@ import spec2model.config_manager as yml_manager
 from spec2model.validator import FolderValidator
 from spec2model.defaults import defaults
 
-config_file_path = 'spec2model/configuration.yml'
-
 class FolderDigger:
 
     yml_config = ''
 
-    def __init__(self):
+    def __init__(self, config_file_path):
         self.specs_list = {}
+        self.config_file_path = 'spec2model/configuration.yml'
         self.yml_config = yml_manager.YamlIO()
        
     def get_specs(self, spec_config, input_folder):
@@ -35,7 +34,7 @@ class FolderDigger:
 
     def get_specification_list(self, input_folder):
         print("Reading Configuration file.")
-        self.yml_config.set_yml_path(config_file_path)
+        self.yml_config.set_yml_path(self.config_file_path)
         spec_config = self.yml_config.get_spec_yml_config()
         all_specs = self.get_specs(spec_config, input_folder)
         print("%s mapping files obtained." % len(all_specs))
