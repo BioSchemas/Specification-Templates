@@ -1,8 +1,30 @@
-import requests
-import gspread
-from pydrive.auth import GoogleAuth
 from rdflib import ConjunctiveGraph
+import csv
+import os
+import requests
+import sys
 
+# Loading Functions
+
+def load_tsv(filename):
+    '''load a tsv file using the csv default provided reader!
+
+       Parameters
+       ==========
+       filename: the file name to load, will return list (rows) of
+       lists (columns)
+    '''
+    rows = []
+    with open(filename,'r') as tsv:
+        content = csv.reader(tsv, delimiter='\t')
+        for row in content:
+            if row:
+                rows.append(row)
+
+    return rows
+
+
+# RDF Functions
 
 def __get_class_name(temp_uri):
     return temp_uri.replace("http://schema.org/","")
@@ -87,9 +109,10 @@ def get_hierarchy(props_dic):
     return type_hierarchy
 
 
-# Function that receives an string with expected types and generates an array with each expected pype
 def get_expected_type(expected_types):
-
+    '''Function that receives an string with expected types
+       and generates an array with each expected type
+    '''
     expected_types = expected_types.strip()
     expected_types = expected_types.replace('\n', '')
     expected_types = expected_types.replace(' OR ', ' ')
@@ -97,8 +120,8 @@ def get_expected_type(expected_types):
     expected_types = expected_types.replace(',', '')
     list_of_types = expected_types.split(" ")
     i = 0
-    for type in list_of_types:
-        list_of_types[i] = type.strip()
+    for etype in list_of_types:
+        list_of_types[i] = etype.strip()
         i += 1
 
     return list_of_types
@@ -122,29 +145,38 @@ def _parse_controlled_vocabulary(temp_cont_vocab):
     return cv_parsed
 
 
-def __get_dic_from_sheet_row(c_property):
+def get_row_value(field, row, headers, clean=True):
+    value = ''
+    for i in range(0, len(row)):
+        if headers[i] == field:
+            value = row[i]
+            break
+    
+    if clean is True:
+        value = value.strip().replace('\n', '')
+    return value
 
-    property_as_dic = {}
+def get_dict_from_row(row, headers):
+
+    props = {}
 
     # Set Bioschemas attributes
-
-    property_as_dic['bsc_dec'] = c_property['BSC Description'].strip().replace('\n', ' ')
-    property_as_dic['marginality'] = c_property['Marginality'].replace('\n', ' ')
-    property_as_dic['cardinality'] = c_property['Cardinality'].strip().strip('\n').replace('\n', ' ')
-    temp_cont_vocab = c_property['Controlled Vocabulary'].strip().replace('\n', ' ')
-    property_as_dic['controlled_vocab'] = _parse_controlled_vocabulary(temp_cont_vocab)
-
+    props['bsc_dec'] = get_row_value('BSC Description', row, headers)
+    props['marginality'] = get_row_value('Marginality', row, headers)
+    props['cardinality'] = get_row_value('Cardinality', row, headers)
+    temp_cont_vocab = get_row_value('Controlled Vocabulary', row, headers)
+    props['controlled_vocab'] = _parse_controlled_vocabulary(temp_cont_vocab)
 
     # Set schema.org attributes
+    props['name'] = get_row_value('Property', row, headers)
+    props['expected_type'] = get_row_value('Expected Type', row, headers) 
+    props['expected_type'] = get_expected_type(props['expected_type'])
+    props['sdo_desc'] = get_row_value('Description', row, headers)
+    print (props['name'] + ':' + props['sdo_desc'] +'\n')
+    if props['sdo_desc'] is None:
+        props['sdo_desc'] = ' ';
 
-    property_as_dic['name'] = c_property['Property'].strip().strip('\n')
-    property_as_dic['expected_type'] = get_expected_type(c_property['Expected Type'])
-    property_as_dic['sdo_desc'] = c_property['Description'].strip().replace('\n', ' ')
-    print (property_as_dic['name'] + ':' + property_as_dic['sdo_desc'] +'\n')
-    if property_as_dic['sdo_desc'] is None:
-        property_as_dic['sdo_desc'] = ' ';
-
-    return property_as_dic
+    return props
 
 
 def get_property_in_hierarchy(sdo_props, mapping_property):
@@ -152,7 +184,7 @@ def get_property_in_hierarchy(sdo_props, mapping_property):
     for hierarchy_level in sdo_props:
         if mapping_property['name'] in sdo_props[hierarchy_level].keys():
             prop_type = hierarchy_level
-            mapping_property['sdo_desc']=sdo_props[hierarchy_level][mapping_property['name']]['description']
+            mapping_property['sdo_desc'] = sdo_props[hierarchy_level][mapping_property['name']]['description']
     return {'type':prop_type, 'property': mapping_property}
 
 
@@ -196,99 +228,129 @@ def get_formatted_props(sdo_props, mapping_props, spec_name, spec_type):
     return {'properties': all_props}
 
 
-def get_mapping_properties(mapping_sheet, spec_type):
-    list_of_hashes = mapping_sheet.get_all_records(head=5)
+def get_mapping_properties(bioschemas_file):
+    '''get_mapping_properties
+       use the bioschemas field file and the specification type to
+       return a list of type properties. The bioschemas file 
+       should already be validated for correct headers.
+
+       Parameters
+       ==========
+       bioschemas_file: the <Template> - Bioschemas.tsv file
+    '''
+
+    rows = load_tsv(bioschemas_file)
+    headers = rows[0]
     type_properties = []
-    for c_property in list_of_hashes:
-        if(c_property['Expected Type']!="" # and c_property['Description']!=""
-           and c_property['Marginality']!="" and c_property['Cardinality']!=""):
-            print("Parsing %s property from Google Sheets." % c_property['Property'])
-            property_as_dic=__get_dic_from_sheet_row(c_property)
-            type_properties.append(property_as_dic)
+    
+    for r in range(1,len(rows)):
+        row = rows[r]
+        
+        # If we want to do checks for empty cells, do it here
+
+        # If Expected Type, Marginality, and Cardinaity isn't empty 
+        if row[1] != "" and rows[6] != "" and rows[7] != "":
+            property_dict = get_dict_from_row(row, headers)
+            type_properties.append(property_dict)
+
     return type_properties
 
 
-class GSheetsParser:
-    gsheet_id = ''
-    cred_file = ''
-    gauth = "This variable will have the Google Authorization file"
-    scope = []
-    spec_metadata={}
-    bsc_specification = {}
+class MappingParser:
+    metadata = {}
 
-    def __init__(self):
-        self.gsheet_id = '1h0-fgqnRe25-tVCmu2yWNQjthLzgkW4a1TVNMpCABlc'
-        #self.cred_file = 'client_secrets.json'
-        #self.scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        self.spec_metadata={}
-        self.bsc_specification = {}
-        creds_path="spec2model/mycreds.txt"
-        self.gauth = GoogleAuth()
-        # Try to load saved client credentials
-        self.gauth.LoadCredentialsFile(creds_path)
-        if self.gauth.credentials is None:
-            # Authenticate if they're not there
-            self.gauth.LocalWebserverAuth()
-        elif self.gauth.access_token_expired:
-            # Refresh them if expired
-            self.gauth.Refresh()
-        else:
-            # Initialize the saved creds
-            self.gauth.Authorize()
-            # Save the current credentials to a file
-            self.gauth.SaveCredentialsFile(creds_path)
+    def __init__(self, metadata=None):
+        if metadata != None:
+            self.metadata = metadata
 
-    def set_gsheet_id(self, gsheet_id):
-        self.gsheet_id = gsheet_id
+    def set_metadata(self, metadata):
+        self.metadata = metadata
 
-    def set_spec_metadata(self, spec_metadata):
-        self.spec_metadata=spec_metadata
 
     def check_url(self, spec_url):
-        if spec_url==None: return "err_404"
-        r=requests.get(spec_url)
-        if r==404:
+        '''check_url doesn't exit if the address isn't found, etc.
+           it just adds the string "err_404" as metadata given these cases.
+        '''
+        if spec_url is None: 
+            return "err_404"
+
+        response = requests.get(spec_url)
+        if response.status_code == 404:
             return "err_404"
         else:
             return spec_url
 
-    def __get_mapping_description(self, mapping_sheet):
-        mapping_description = {}
-        mapping_description['name']=self.spec_metadata['name']
-        print("Parsing %s Google Sheet" % mapping_description['name'])
-        mapping_description['g_mapping_file']=self.spec_metadata['g_mapping_file']
-        mapping_description['spec_mapping_url']=self.spec_metadata['spec_mapping_url']
-        mapping_description['status']=self.spec_metadata['status']
-        mapping_description['spec_type']=self.spec_metadata['spec_type']
-        mapping_description['gh_folder']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']
-        mapping_description['gh_examples']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']+'/examples'
-        mapping_description['gh_tasks']='https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+self.spec_metadata['name']
-        mapping_description['edit_url']='https://github.com/BioSchemas/specifications/tree/master/'+self.spec_metadata['name']+'/specification.html'
-        mapping_description['use_cases_url']=self.check_url(self.spec_metadata['use_cases_url'])
-        mapping_description['version']=self.spec_metadata['version']
-        mapping_description['subtitle'] = mapping_sheet.acell('B1').value
-        mapping_description['description'] = mapping_sheet.acell('B2').value
-        mapping_description['parent_type'] = mapping_sheet.acell('A6').value[8:].strip()
-        return mapping_description
+    def get_description(self, spec_file=None):
 
-    def get_mapping_g_sheets(self):
+        if not spec_file:
+            spec_file = self.metadata['specification_file']
 
-        client = gspread.authorize(self.gauth.credentials)
+        # Read in both, these are already validated
+        spec_sheet = load_tsv(spec_file)
 
-        print("Parsing %s file." % self.spec_metadata['g_mapping_file'])
-        mapping_sheet = client.open_by_key(self.gsheet_id).get_worksheet(0)
+        # Generate values in advance
+        name = self.metadata['name']
+        gh_base = 'https://github.com/BioSchemas/specifications/tree/master'
+        use_cases_url = self.metadata['use_cases_url']
 
-        spec_description = self.__get_mapping_description(mapping_sheet)
-        sdo_props = get_properties_in_hierarchy(spec_description['parent_type'])
+        description = {}
+        description['name'] = name
+        print("Parsing %s Workbook" % description['name'])
 
-        spec_description ['hierarchy']= get_hierarchy(sdo_props)
-        print("Prepared schema.org properties for hierarchy %s" % str(spec_description ['hierarchy']))
+        description['status'] = self.metadata['status']
+        description['spec_type'] = self.metadata['spec_type']
 
+        # Github Future Links
+        description['gh_folder'] = '%s/%s' % (gh_base, name)
+        description['gh_examples']= '%s/%s/examples' % (gh_base, name)
+        description['gh_tasks'] = 'https://github.com/BioSchemas/bioschemas/labels/type%3A%20'+ name
+
+        description['edit_url']='%s/%s/specification.html' % (gh_base, name)
+        description['use_cases_url'] = self.check_url(use_cases_url)
+        description['version'] = self.metadata['version']
+        description['parent_type'] = self.metadata.get('parent_type', 'Thing')
+
+        # Parse specification file
+        description['subtitle'] = spec_sheet[1][1]
+        description['description'] = spec_sheet[1][2]
+        return description
+
+    def get_mapping(self, spec_sheet=None, 
+                          bioschemas_sheet=None):
+        '''get a mapping, meanng the full properties given a specification sheet
+           and a bioschemas sheet. If files aren't provided, the defaults defined
+           at self.defaults.paths are used.
+
+           Parameters
+           ==========
+           spec_sheet: the sheet with basic information (description, name, etc.)
+           bioschemas_sheet: sheet (tsv) with bioschemas fields
+        '''
+
+        print("Parsing %s." % self.metadata['name'])
+
+        spec_description = self.get_description(spec_sheet)
+        if bioschemas_sheet is None:
+            bioschemas_sheet = self.metadata['bioschemas_file']
+
+        try:
+            ptype = spec_description['parent_type']
+            sdo_props = get_properties_in_hierarchy(ptype)
+        except IndexError as e:
+            print('Error finding parent structure! Is %s a valid entity?' %ptype)
+            sys.exit(1)
+
+        spec_description['hierarchy'] = get_hierarchy(sdo_props)
+        spec_description['hierarchy'].reverse()
+        print_hierarchy = ' > '.join(spec_description['hierarchy'])
+        print("Prepared schema.org properties for hierarchy %s" % print_hierarchy)
         print("Classifing %s properties" % spec_description['name'])
-        mapping_props = get_mapping_properties(mapping_sheet, spec_description['spec_type'])
+        mapping_props = get_mapping_properties(bioschemas_sheet)
 
-
-        formatted_props = get_formatted_props(sdo_props, mapping_props, spec_description['name'], spec_description['spec_type'])
+        formatted_props = get_formatted_props(sdo_props, 
+                                              mapping_props, 
+                                              spec_description['name'], 
+                                              spec_description['spec_type'])
 
         spec_description.update(formatted_props)
 

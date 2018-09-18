@@ -2,7 +2,7 @@
 
 **map2model** is a Python module that facilitates [Bioschemas Groups](http://bioschemas.org/groups/) in the specification definition process.
 
-**map2model** retrieves properties and Bioschemas fields (Marginality, Cardinality and Controlled Vocabularies) from Bioschemas mapping files (in [GDrive](https://drive.google.com/drive/folders/0Bw_p-HKWUjHoNThZOWNKbGhOODg?usp=sharing)), then classifies properties into two groups:
+**map2model** retrieves properties and Bioschemas fields (Marginality, Cardinality and Controlled Vocabularies) from Bioschemas mapping files (in the [specifications](specifications)) folder, then classifies properties into two groups:
 1. **Extended properties:** Properties that are part of the extended schema.org Type.
 1. **New properties:** Properties that are new to the schema.org vocabulary or are completely new to schema.org.
 
@@ -10,10 +10,10 @@ After classifying the properties, **map2model** generates a Markdown file that c
 
 Comments on each specification should be done through the *GitHub issues* tool within the [bioschemas repository](https://github.com/BioSchemas/bioschemas). This enables tracking, commenting on and executing of corrections.
 
-![map2model workflow](../master/docs/img/map2model_workflow.jpg)
-> If you want to modify the Flow Chart [Click here](https://drive.google.com/file/d/0B9lW_BhBep0TY3NpZ3ZxRnAySkk/view?usp=sharing) and store the result in the *doc > img* folder with the name **map2model_workflow.jpg**.
+![map2model workflow](docs/img/map2model_workflow.png)
+> If you want to modify the Flow Chart open the [xml file](docs/img/map2model_workflow.xml) and name it `map2model_workflow.png` in the *doc > img*.
 
-## Run map2model on your computer
+## Usage
 
 ### Requirements
 
@@ -25,18 +25,41 @@ Before starting, please ensure you have the following installed:
 
 ### Executing map2model
 
-1. Clone the **map2model** repository: ```git clone https://github.com/BioSchemas/map2model.git```
-1. Add the [Bioschemas GDrive Folder](https://drive.google.com/open?id=0B8yXU9SkT3ftaWJtTGYyTTJjck0) to your Google Account Drive.
-      > In your Google Drive Account go to **Shared with me**, right click the **Bioschemas.org** folder and select **Add to my Drive**)
-1. Open the Terminal or Console application of your Operating System and go to the folder where you cloned the **map2model** repository.
-1. Modify the *spec2model > configuration.yml* file in your cloned repository (configuration.yml tells map2model which specifications exist and where information on them can be found).
-      > If you need help to modify the configuration.yml file, please refer to the *Adding new specifications* section later in this readme.
-1. Install Python dependencies using the command ```pip3 install -r requirements.txt```.
-1. Run the map2model module by executing the command ```python3 run.py```.
-1. After executing the ```run.py``` command a web browser will ask for a Google Account authentication. **Log in using the account you used for step 2.**
-1. Once complete, the specifications can be found in a subfolder inside *map2model > docs > spec_files* folder. There should be a folder for each specification listed in ```configuration.yml```.
+Clone the **map2model** repository: ```git clone https://github.com/BioSchemas/map2model.git```
 
-### Update specifications repository
+```bash
+git clone https://github.com/BioSchemas/map2model.git
+cd map2model
+```
+
+Install dependencies
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+If you want to add a specification, add an entry to [spec2model/configuration.yml]. This file tells map2model which specifications exist. To create a new specification, the section that you need to add includes:
+
+```
+- name: NameOfMySpec
+  status: revision
+  spec_type: Profile
+  use_cases_url:
+  version: 0.2.0
+  parent_type: CreativeWork
+```
+
+Importantly, the following expectations will be tested:
+
+  1. you have created a `_NameOfMySpec` folder under [specifications](specifications)
+  2. you have created your mapping files and added them to this folder. We provide a [Google Drive sheets template](https://docs.google.com/spreadsheets/d/1Ty69GRzc3xuvfpEIRHjfl_9L25MNFfrKXCdwrpxYslo/edit?usp=sharing) that you can use to do this, and simply export each sheet as .tsv (tab separated values). This means that four files should go into your `_NameOfMySpec` folder. For detailed instruction, see [the Specification Creation](#create-a-specification) section below.
+  3. You will be able to run validation functions over these files to check their quality.
+
+While your specification is a draft, the name of the folder will start with an underscore (`_NameOfMySpec`). When you are done, remove the underscore (`NameOfMySpec`).
+
+When you are finished with your spec, run the script to generate files in *map2model > docs > spec_files*. Check that your folder is present! Next, you will want to open a pull request (PR) to update the repository.
+
+### Updating Specifications
 
 1. Fork [Bioschemas specification repository](https://github.com/BioSchemas/specifications)
 1. Clone your fork to your local computer.
@@ -54,55 +77,16 @@ Before starting, please ensure you have the following installed:
       > To preserve [Bioschemas Web Page](http://bioschemas.org), changes to [bioschemas.github.io repository](https://github.com/BioSchemas/bioschemas.github.io) will be issued by Bioschemas Web Master.
 1. Check your changes at [Specifications Bioschemas Web section](htt://bioschemas.org/bsc_specs)
 
-****
-## Advanced user's documentation
+### Create a Specification
 
-### Adding new specifications
+Your workflow is going to be simple. You will:
 
-If you have created a new specification (or a specification is missing from the *map2model > docs > specification_md_files* folder) you will need to extend the *map2model > spec2model > configuration.yml* file.
+ 1. generate tab separated value files from templates provided on Google Drive
+ 2. add the files to a new specification folder here
+ 3. commit to the Github repository you have forked and cloned, and issue a pull request akin to [Updating Specifications](#updating-specifications)
 
-If you are unfamiliar with yaml, please read [http://yaml.org/](http://yaml.org/).
-
-1. Open the *map2model > spec2model > [configuration.yml](https://github.com/BioSchemas/map2model/blob/master/spec2model/configuration.yml)* file.
-1. Erase all the file content and start the ```.yml``` file with
-```
-specifications:
-```
-1. Add the following yaml structure per each specification:
-```
-  - name :
-    g_folder:
-    g_mapping_file:
-    status: revision
-    spec_type: Profile
-    use_cases_url:
-    version: 0.0.1
-```
-      - Please be careful with spacing, as it is important in YAML!
-1. Apart from *use_case_url* all fields must have a value:
-      - *name* is the name of the specification
-      - *g_folder* is the name of the gDocs folder in which the new specification exists. E.g., a *Tool* specification will be found in the **Tool** folder (i.e., *gDrive > BioSchemas.org > Specifications > Tool*).
-      - *g_mapping_file* : in the *g_folder* you should have a mapping file based on the [original template](https://docs.google.com/spreadsheets/d/1OMBiB8SXiRe1b3Cl91IuNlHbJ9_UXHg8B-GY0MYRSaY/edit?usp=sharing). Write the name of the mapping file here, e.g., **Tool Mapping**.
-      - *use_cases_url* : in the *g_folder* you may have a use case document. If it exists, paste a link to it here.
-1. Re-run ```python3 run.py```. Your new markdown files should be in the *bioschemas-map2model > docs > specification_md_files* folder.
-
-### Create your own client_secrets.json
-
-**map2model** can work with the generic client_secrets file, but here you have the process to create your own json. It is unlikely you will ever need to do this, but the instructions remain for completeness.
-
-##### Create a new Google's APIs Project and add Google Drive API Client:
-- Go to [Google's APIs Console](https://console.developers.google.com/iam-admin/projects) and create your own project. Call it whatever you want.
-- You will need to wait for a few moments while Google creates the project. Refresh the page and you should see your new project listed.
-- Click on the **Google APIs** logo (top left of screen). If you have existing projects, select the new one in the dropdown box next to the Google APIs logo.
-- Under **G Suite APIs** you will see **Drive API**. Click on it.
-- On the next page, click on **Enable**
-- You should see a yellow warning at the top of the page informing you of the need for credentials. Do **not** click the create credentials button at the right of this warning. Instead click the **key icon** in the left menu bar.
-- In the new dialog box there is a dropdown called **create credentials**... choose **OAuth client ID**.
-- A form with radio buttons will appear, but it is greyed out and you cannot select anything. Instead click the blue  **Configure consent screen** button on the right.
-- In the new form enter whatever **product name** you wish and click **save**.
-- You will be returned to the form with radio buttons; select **Web application**.
-- In the text box called 'Authorised Javascript origins' type http://localhost:8080 (notice the lack of a trailing slash)
-- In the text box called 'Authorised redirect URIs' type http://localhost:8080/ (notice the trailing slash)
-- Click **create** then **OK**.
-- You will be on a page called 'Credentials' which has a table with the name of your new app. At the far right you will see a download icon (an arrow pointing down, above a line). Clicking on this allows you to download your credentials.
-- The downloaded file will have a very long name, e.g., *client_secret_896441073116-l0karljg25m6uvss45t48ufb9d7u3kku.apps.googleusercontent.com*. Change the name to **client_secrets.json** and move it to the top level of your cloned **bioschemas-map2model** repository.
+copied the mapping template files for Authors, Specification Info, Bioschemas Fields, and Schema.org Mapping into the folder. If you haven't created your tempates yet, you can generate them [from] this template](https://docs.google.com/spreadsheets/d/1Ty69GRzc3xuvfpEIRHjfl_9L25MNFfrKXCdwrpxYslo/edit?usp=sharing) and simply export each sheet as .tsv (tab separated values). This means that four files should go into your `NameOfMySpec` folder: 
+    - `NameOfMySpec_Mapping.tsv`
+    - `NameOfMySpec_BioschemasFields.tsv`
+    - `NameOfMySpec_Specification.tsv`
+    - `NameOfMySpec_Authors.tsv`
