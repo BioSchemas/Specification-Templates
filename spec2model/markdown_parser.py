@@ -35,7 +35,7 @@ class FrontMatterParser:
         if not os.path.exists(input_folder):
             print('Cannot find %s' % input_folder)
             sys.exit(1)
-        print('Found %s' % input_folder)
+        print('Found input folder %s' % input_folder)
 
     def __get_specs_list(self):
         '''return listing of specs, meaning loaded workbooks. The workbooks should
