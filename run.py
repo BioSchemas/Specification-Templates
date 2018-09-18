@@ -54,6 +54,10 @@ def main():
     if not os.path.exists(outfolder):
         os.mkdir(outfolder)
 
+    print('Configuration file set to %s' config)
+    print('Output folder set to %s' outfolder)
+    print('Input folder set to %s' folder)
+
     # Both must exist
     for path in [config, folder]:
         if not os.path.exists(path):
